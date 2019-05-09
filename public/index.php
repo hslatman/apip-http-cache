@@ -35,7 +35,11 @@ $kernel = new Kernel($_SERVER['APP_ENV'], $debug);
 $storage = new Store($kernel->getCacheDir(). DIRECTORY_SEPARATOR . 'http_cache');
 
 // NOTE: we're always using the cache now, for development purposes that's OK.
-$kernel = new Cache($kernel, $storage);
+$options = [
+    'debug' => true,
+    'private_headers' => ['Authorization', 'Cookie']
+];
+$kernel = new Cache($kernel, $storage, null, $options);
 
 $request = Request::createFromGlobals();
 $response = $kernel->handle($request);
