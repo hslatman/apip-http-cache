@@ -71,9 +71,11 @@ class Purger implements PurgerInterface
         // Is the key correct, we're using?
         // TODO: add option to refresh the cache with new contents?
 
+        // TODO: integrate with the FosHttpCacheBundle, CacheManager, CacheInvalidator.
 
-        $event = new PurgeCacheEvent();
-        $this->dispatcher->dispatch($event::PURGE, $event);
+
+        //$event = new PurgeCacheEvent();
+        //$this->dispatcher->dispatch($event::PURGE, $event);
 
         // NOTES:
         // The way I look at it know, is as follows:

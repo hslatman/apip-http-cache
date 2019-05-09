@@ -26,6 +26,7 @@ class Kernel extends BaseKernel implements HttpCacheProvider
     {
         parent::__construct($environment, $debug);
 
+        // NOTE: we're configuring the cache here; we don't have access to the Symfony configuration yet, though.
         $options = [
             'debug' => $debug, // NOTE: the debug option enables the X-Symfony-Cache header for tracking cache hits more narrowly
             //'private_headers' => ['Authorization', 'Cookie']

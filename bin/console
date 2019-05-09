@@ -37,6 +37,9 @@ if ($_SERVER['APP_DEBUG']) {
     }
 }
 
-$kernel = new Kernel($_SERVER['APP_ENV'], (bool) $_SERVER['APP_DEBUG']);
+$env = $_SERVER['APP_ENV'];
+$debug = (bool) $_SERVER['APP_DEBUG'];
+$kernel = new Kernel($env, $debug);
+
 $application = new Application($kernel);
 $application->run($input);

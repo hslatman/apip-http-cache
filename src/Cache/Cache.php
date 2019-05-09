@@ -31,8 +31,8 @@ class Cache extends HttpCache implements CacheInvalidation
     {
         parent::__construct($kernel, $store, $surrogate, $options);
 
-        $this->addSubscriber(new PurgeListener());
-        $this->addSubscriber(new RefreshListener());
+        $this->addSubscriber(new PurgeListener()); // SEE: https://foshttpcache.readthedocs.io/en/latest/symfony-cache-configuration.html#purge
+        $this->addSubscriber(new RefreshListener()); // SEE: https://foshttpcache.readthedocs.io/en/latest/symfony-cache-configuration.html#refresh
 
         // The DebugListener is used when testing caching functionality
         if (isset($options['debug']) && $options['debug']) {
