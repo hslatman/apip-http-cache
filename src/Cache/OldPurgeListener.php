@@ -14,7 +14,7 @@ use FOS\HttpCache\SymfonyCache\PurgeListener as BasePurgeListener;
 use Symfony\Component\HttpKernel\HttpCache\Store;
 use Symfony\Component\HttpKernel\HttpCache\StoreInterface;
 
-class PurgeListener extends BasePurgeListener
+class OldPurgeListener extends BasePurgeListener
 {
 
     /** @var StoreInterface $store */

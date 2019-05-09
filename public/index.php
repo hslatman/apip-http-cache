@@ -1,11 +1,8 @@
 <?php
 
 use App\Kernel;
-use App\Cache\Cache;
 use Symfony\Component\Debug\Debug;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\HttpCache\Store;
-
 
 require dirname(__DIR__).'/config/bootstrap.php';
 
@@ -24,22 +21,14 @@ if ($trustedHosts = $_SERVER['TRUSTED_HOSTS'] ?? $_ENV['TRUSTED_HOSTS'] ?? false
 }
 
 $debug = (bool) $_SERVER['APP_DEBUG'];
-$debug = true;
 $kernel = new Kernel($_SERVER['APP_ENV'], $debug);
-// Wrap the default Kernel with the CacheKernel one in 'prod' environment
+
+// NOTE: we're currently always using the cache, also in development; we might want to improve this setting using an ENV var or something.
 //if ('prod' === $kernel->getEnvironment()) {
-//    $kernel = new CacheKernel($kernel);
+//    $kernel = $kernel->getHttpCache();
 //}
 
-// NOTE: we're basically mirroring the HttpCache initialization from FrameworkBundle here
-$storage = new Store($kernel->getCacheDir(). DIRECTORY_SEPARATOR . 'http_cache');
-
-// NOTE: we're always using the cache now, for development purposes that's OK.
-$options = [
-    'debug' => true,
-    'private_headers' => ['Authorization', 'Cookie']
-];
-$kernel = new Cache($kernel, $storage, null, $options);
+$kernel = $kernel->getHttpCache();
 
 $request = Request::createFromGlobals();
 $response = $kernel->handle($request);

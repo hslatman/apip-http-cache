@@ -9,6 +9,7 @@ namespace App\Cache;
 
 use FOS\HttpCache\SymfonyCache\CacheInvalidation;
 use FOS\HttpCache\SymfonyCache\EventDispatchingHttpCache;
+use FOS\HttpCache\SymfonyCache\PurgeListener;
 use FOS\HttpCache\SymfonyCache\RefreshListener;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\HttpCache\HttpCache;
@@ -29,12 +30,11 @@ class Cache extends HttpCache implements CacheInvalidation
     {
         parent::__construct($kernel, $store, $surrogate, $options);
 
-        //$listener = new PurgeListener($store);
-
-        $this->addSubscriber(new \FOS\HttpCache\SymfonyCache\PurgeListener());
+        $this->addSubscriber(new PurgeListener());
         $this->addSubscriber(new RefreshListener());
 
-        //$this->addSubscriber($listener);
+        // TODO: further customization?
+
     }
 
     /**

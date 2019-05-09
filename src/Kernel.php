@@ -2,18 +2,42 @@
 
 namespace App;
 
+use App\Cache\Cache;
+use FOS\HttpCache\SymfonyCache\HttpCacheAware;
+use FOS\HttpCache\SymfonyCache\HttpCacheProvider;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
 use Symfony\Component\Config\Loader\LoaderInterface;
 use Symfony\Component\Config\Resource\FileResource;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Symfony\Component\HttpKernel\HttpCache\Store;
 use Symfony\Component\HttpKernel\Kernel as BaseKernel;
 use Symfony\Component\Routing\RouteCollectionBuilder;
 
-class Kernel extends BaseKernel
+class Kernel extends BaseKernel implements HttpCacheProvider
 {
+
+    use HttpCacheAware;
+
     use MicroKernelTrait;
 
     private const CONFIG_EXTS = '.{php,xml,yaml,yml}';
+
+    public function __construct(string $environment, bool $debug)
+    {
+        parent::__construct($environment, $debug);
+
+        $options = [
+            'debug' => $debug, // NOTE: the debug option enables the X-Symfony-Cache header for tracking cache hits more narrowly
+            //'private_headers' => ['Authorization', 'Cookie']
+        ];
+
+        // TODO: look into different types of Store(Interface) implementations available
+        $storage = new Store($this->getCacheDir(). DIRECTORY_SEPARATOR . 'http_cache'); // This is the default location for Symfony FrameworkBundle
+        $cache = new Cache($this, $storage, null, $options);
+
+        // NOTE: we're setting up the Kernel to use the Event Dispatch approach to cache invalidation
+        $this->setHttpCache($cache);
+    }
 
     public function registerBundles(): iterable
     {

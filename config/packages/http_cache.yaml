@@ -1,0 +1,41 @@
+fos_http_cache:
+  proxy_client:
+    symfony:
+      use_kernel_dispatcher: true
+  tags:
+    annotations:
+      enabled: false
+#fos_http_cache:
+#  proxy_client:
+#    default: symfony
+#    symfony:
+#      # HTTP header to use when sending tag invalidation requests to Symfony HttpCache
+#      tags_header:          X-Cache-Tags
+#
+#      # HTTP method for sending tag invalidation requests to Symfony HttpCache
+#      tags_method:          PURGETAGS
+#
+#      # Maximum header length when invalidating tags. If there are more tags to invalidate than fit into the header, the invalidation request is split into several requests.
+#      header_length:        ~
+#
+#      # HTTP method to use when sending purge requests to Symfony HttpCache
+#      purge_method:         PURGE
+#
+#      # Dispatches invalidation requests to the kernel directly instead of executing real HTTP requests. Requires special kernel setup! Refer to the documentation for more information.
+#      use_kernel_dispatcher: false
+#      http:
+#
+#        # Addresses of the hosts the caching proxy is running on. May be hostname or ip, and with :port if not the default port 80.
+#        servers:              # Required
+#
+#          # Prototype
+#          name:                 ~
+#
+#        # Default host name and optional path for path based invalidation.
+#        base_url:             'http://localhost:8000'
+#
+#        # Httplug async client service name to use for sending the requests.
+#        http_client:          null
+
+  #invalidation:
+  #  enabled: true
