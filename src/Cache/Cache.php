@@ -8,6 +8,7 @@
 namespace App\Cache;
 
 use FOS\HttpCache\SymfonyCache\CacheInvalidation;
+use FOS\HttpCache\SymfonyCache\DebugListener;
 use FOS\HttpCache\SymfonyCache\EventDispatchingHttpCache;
 use FOS\HttpCache\SymfonyCache\PurgeListener;
 use FOS\HttpCache\SymfonyCache\RefreshListener;
@@ -32,6 +33,11 @@ class Cache extends HttpCache implements CacheInvalidation
 
         $this->addSubscriber(new PurgeListener());
         $this->addSubscriber(new RefreshListener());
+
+        // The DebugListener is used when testing caching functionality
+        if (isset($options['debug']) && $options['debug']) {
+            $this->addSubscriber(new DebugListener());
+        }
 
         // TODO: further customization?
 
