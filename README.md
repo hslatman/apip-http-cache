@@ -52,7 +52,7 @@ The current implementation does not work completely as expected, as described in
 We could also improve this method by automatically registering the rules that should trigger cache invalidation.
 
 
-### Item
+#### Item
 
 The Item entity is configured with tag-based cache invalidation.
 For each entity type for which tag-based cache invalidation should work, two rules should be created.
@@ -61,7 +61,7 @@ The rules affect the default collection as well as item routes provided by API P
 This method is not optimal, because there's some manual work involved with creating the tag-based rules.
 We could improve by creating a way for automatically registering the rules, like above.
 
-### Bug
+#### Bug
 
 The Bug entity is configured with a custom cache invalidation method.
 The method relies on the API Platform events system.
