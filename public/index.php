@@ -27,13 +27,11 @@ if (\array_key_exists('APP_CACHE', $_SERVER)) {
 
 $env = $_SERVER['APP_ENV'];
 $debug = (bool) $_SERVER['APP_DEBUG'];
-$kernel = new Kernel($env, $debug);
+$kernel = new Kernel($env, $debug, $cache);
 
 if ($cache) {
     $kernel = $kernel->getHttpCache();
 }
-
-
 
 $request = Request::createFromGlobals();
 $response = $kernel->handle($request);

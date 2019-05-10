@@ -22,22 +22,25 @@ class Kernel extends BaseKernel implements HttpCacheProvider
 
     private const CONFIG_EXTS = '.{php,xml,yaml,yml}';
 
-    public function __construct(string $environment, bool $debug)
+    public function __construct(string $environment, bool $debug, bool $cache)
     {
         parent::__construct($environment, $debug);
 
-        // NOTE: we're configuring the cache here; we don't have access to the Symfony configuration yet, though.
-        $options = [
-            'debug' => $debug, // NOTE: the debug option enables the X-Symfony-Cache header for tracking cache hits more narrowly
-            //'private_headers' => ['Authorization', 'Cookie']
-        ];
+        if ($cache) {
+            // NOTE: we're configuring the cache here; we don't have access to the Symfony configuration yet, though.
+            $options = [
+                'debug' => $debug, // NOTE: the debug option enables the X-Symfony-Cache header for tracking cache hits more narrowly
+                //'private_headers' => ['Authorization', 'Cookie']
+            ];
 
-        // TODO: look into different types of Store(Interface) implementations available
-        $storage = new Store($this->getCacheDir(). DIRECTORY_SEPARATOR . 'http_cache'); // This is the default location for Symfony FrameworkBundle
-        $cache = new Cache($this, $storage, null, $options);
+            // TODO: look into different types of Store(Interface) implementations available
+            $storage = new Store($this->getCacheDir(). DIRECTORY_SEPARATOR . 'http_cache'); // This is the default location for Symfony FrameworkBundle
+            $cache = new Cache($this, $storage, null, $options);
 
-        // NOTE: we're setting up the Kernel to use the Event Dispatch approach to cache invalidation
-        $this->setHttpCache($cache);
+            // NOTE: we're setting up the Kernel to use the Event Dispatch approach to cache invalidation
+            $this->setHttpCache($cache);
+        }
+
     }
 
     public function registerBundles(): iterable
