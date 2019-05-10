@@ -4,6 +4,9 @@ use App\Kernel;
 use Symfony\Component\Debug\Debug;
 use Symfony\Component\HttpFoundation\Request;
 
+use \FOS\HttpCache\SymfonyCache\KernelDispatcher;
+use \FOS\HttpCache\ProxyClient\Symfony;
+
 require dirname(__DIR__).'/config/bootstrap.php';
 
 if ($_SERVER['APP_DEBUG']) {
@@ -30,6 +33,11 @@ $debug = (bool) $_SERVER['APP_DEBUG'];
 $kernel = new Kernel($env, $debug, $cache);
 
 if ($cache) {
+    // Preparing the ProxyClient as described on https://foshttpcache.readthedocs.io/en/latest/proxy-clients.html#kerneldispatcher-for-single-server-installations
+    $dispatcher = new KernelDispatcher($kernel);
+    $symfony = new Symfony($dispatcher);
+
+    // Retrieve the EventDispatchingHttpCache/HttpKernelInterface
     $kernel = $kernel->getHttpCache();
 }
 
