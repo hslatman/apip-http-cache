@@ -1,11 +1,11 @@
 <?php
 
 use App\Kernel;
-use App\Cache\Cache;
 use Symfony\Component\Debug\Debug;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpKernel\HttpCache\Store;
 
+use \FOS\HttpCache\SymfonyCache\KernelDispatcher;
+use \FOS\HttpCache\ProxyClient\Symfony;
 
 require dirname(__DIR__).'/config/bootstrap.php';
 
@@ -23,19 +23,23 @@ if ($trustedHosts = $_SERVER['TRUSTED_HOSTS'] ?? $_ENV['TRUSTED_HOSTS'] ?? false
     Request::setTrustedHosts([$trustedHosts]);
 }
 
+$cache = false;
+if (\array_key_exists('APP_CACHE', $_SERVER)) {
+    $cache = $_SERVER['APP_CACHE'];
+}
+
+$env = $_SERVER['APP_ENV'];
 $debug = (bool) $_SERVER['APP_DEBUG'];
-$debug = true;
-$kernel = new Kernel($_SERVER['APP_ENV'], $debug);
-// Wrap the default Kernel with the CacheKernel one in 'prod' environment
-//if ('prod' === $kernel->getEnvironment()) {
-//    $kernel = new CacheKernel($kernel);
-//}
+$kernel = new Kernel($env, $debug, $cache);
 
-// NOTE: we're basically mirroring the HttpCache initialization from FrameworkBundle here
-$storage = new Store($kernel->getCacheDir(). DIRECTORY_SEPARATOR . 'http_cache');
+if ($cache) {
+    // Preparing the ProxyClient as described on https://foshttpcache.readthedocs.io/en/latest/proxy-clients.html#kerneldispatcher-for-single-server-installations
+    $dispatcher = new KernelDispatcher($kernel);
+    $symfony = new Symfony($dispatcher);
 
-// NOTE: we're always using the cache now, for development purposes that's OK.
-$kernel = new Cache($kernel, $storage);
+    // Retrieve the EventDispatchingHttpCache/HttpKernelInterface
+    $kernel = $kernel->getHttpCache();
+}
 
 $request = Request::createFromGlobals();
 $response = $kernel->handle($request);

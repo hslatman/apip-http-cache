@@ -1,0 +1,64 @@
+fos_http_cache:
+  proxy_client:
+    default: symfony
+    symfony:
+      tags_header: X-Cache-Tags
+      use_kernel_dispatcher: true
+      #http:
+
+        # Addresses of the hosts the caching proxy is running on. May be hostname or ip, and with :port if not the default port 80.
+      #  servers:
+      #    - localhost:8000 # Required
+
+          # Prototype
+          #name:                 ~
+
+        # Default host name and optional path for path based invalidation.
+      #  base_url:             http://localhost:8000
+
+        # Httplug async client service name to use for sending the requests.
+        #http_client:          null
+
+  cache_manager:
+    enabled: true
+  invalidation:
+    enabled: true
+    rules:
+      -
+        match:
+          attributes:
+            _route: "api_issues_put_item|api_issues_delete_item"
+        routes:
+          api_issues_get_collection: # for some reason, the GET /api/issues is not invalidated using this match. Why? According to FOSHttpCacheBundle docs it should work.
+            ignore_extra_params: true
+          api_issues_get_item:
+            ignore_extra_params: false
+      -
+        match:
+          attributes:
+            _route: "api_issues_post_collection"
+        routes:
+          api_issues_get_collection: ~
+
+  tags:
+    annotations:
+      # Currently we do not enable annotations, because API Platform is providing us with the default controllers for ApiResources.
+      # They might be of use when 1) there are custom operations that mutate data or when 2) there exist custom data providers
+      enabled: false
+    rules:
+      # NOTE: the below rules will take care of cache invalidation based on tags. Currently we have two rules for
+      # a single Entity type, an Entity specific one, and a rule that applies to the collection. Can we improve on this?
+
+      - # Rule 1) Match specific items; tag them with item-x and items
+        match:
+          path: ^/api/items/
+        tags: [items] # When invalidating a single item, the collection is also invalidated through this configuration
+        tag_expressions: ["'item-'~id"] # When invalidating a single item, the GET for that single Item will be a cache miss at first
+      - # Rule 2) Match all items (GET, POST); tag them with items. The first one does not work, because it breaks on the ~id part.
+        match:
+          path: ^/api/items
+        tags: [items] # When POSTing a new Item, the cache for the collection is reset
+
+  debug:
+    enabled: true # hardcoded for now; we could override this in other environments.
+    header: X-Cache-Debug

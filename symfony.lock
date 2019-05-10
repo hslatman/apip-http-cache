@@ -100,6 +100,9 @@
     "friendsofsymfony/http-cache": {
         "version": "2.6.0"
     },
+    "friendsofsymfony/http-cache-bundle": {
+        "version": "2.6.1"
+    },
     "guzzlehttp/guzzle": {
         "version": "6.3.3"
     },
@@ -288,6 +291,9 @@
     "symfony/inflector": {
         "version": "v4.2.8"
     },
+    "symfony/lock": {
+        "version": "v4.2.8"
+    },
     "symfony/maker-bundle": {
         "version": "1.0",
         "recipe": {
@@ -432,6 +438,9 @@
     },
     "symfony/yaml": {
         "version": "v4.2.8"
+    },
+    "toflar/psr6-symfony-http-cache-store": {
+        "version": "1.1.2"
     },
     "twig/twig": {
         "version": "v2.9.0"

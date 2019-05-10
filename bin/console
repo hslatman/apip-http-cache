@@ -6,6 +6,9 @@ use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Debug\Debug;
 
+use \FOS\HttpCache\SymfonyCache\KernelDispatcher;
+use \FOS\HttpCache\ProxyClient\Symfony;
+
 if (false === in_array(\PHP_SAPI, ['cli', 'phpdbg', 'embed'], true)) {
     echo 'Warning: The console should be invoked via the CLI version of PHP, not the '.\PHP_SAPI.' SAPI'.\PHP_EOL;
 }
@@ -37,6 +40,20 @@ if ($_SERVER['APP_DEBUG']) {
     }
 }
 
-$kernel = new Kernel($_SERVER['APP_ENV'], (bool) $_SERVER['APP_DEBUG']);
+$cache = false;
+if (\array_key_exists('APP_CACHE', $_SERVER)) {
+    $cache = $_SERVER['APP_CACHE'];
+}
+
+$env = $_SERVER['APP_ENV'];
+$debug = (bool) $_SERVER['APP_DEBUG'];
+$kernel = new Kernel($env, $debug, $cache);
+
+if ($cache) {
+    $dispatcher = new KernelDispatcher($kernel);
+    $symfony = new Symfony($dispatcher);
+}
+
+// NOTE: we're not using the EventDispatchingHttpCache here, because we're not going to handle requests
 $application = new Application($kernel);
 $application->run($input);
