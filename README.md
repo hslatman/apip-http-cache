@@ -75,3 +75,6 @@ For the sake of this POC it has been implemented to only trigger on the Bug enti
 
 * Look into cache refresh
 * Look into integration with API Platform using PurgerInterface
+* Add UserContext and handling thereof in the cache
+* Add some custom commands for managing the HttpCache
+* Extend documentation
