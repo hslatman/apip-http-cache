@@ -69,6 +69,12 @@ class CacheInvalidationSubscriber implements EventSubscriberInterface
         // We only need to invalidate the collection route by default in API Platform; the other default operations are managed by HttpCache itself
         $this->manager->invalidateRoute($collection_route);
 
+        // NOTE: we could implement all of the invalidations in this class, including the ones that are managed by FOSHttpCacheBundle
+        // by having the fos_http_cache.invalidation.enabled set to true. This could be disabled, after which we would be in full control over our
+        // cache invalidation process.
+
+        // NOTE: we could also look into refreshing the cache using this listener or a different listener.
+
         // NOTE: the flush() function is called automatically on kernel.terminate.event (https://foshttpcachebundle.readthedocs.io/en/latest/reference/cache-manager.html#flush)
         //$this->manager->flush();
     }
