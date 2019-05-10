@@ -20,16 +20,20 @@ if ($trustedHosts = $_SERVER['TRUSTED_HOSTS'] ?? $_ENV['TRUSTED_HOSTS'] ?? false
     Request::setTrustedHosts([$trustedHosts]);
 }
 
+$cache = false;
+if (\array_key_exists('APP_CACHE', $_SERVER)) {
+    $cache = $_SERVER['APP_CACHE'];
+}
+
 $env = $_SERVER['APP_ENV'];
 $debug = (bool) $_SERVER['APP_DEBUG'];
 $kernel = new Kernel($env, $debug);
 
-// NOTE: we're currently always using the cache, also in development; we might want to improve this setting using an ENV var or something.
-//if ('prod' === $kernel->getEnvironment()) {
-//    $kernel = $kernel->getHttpCache();
-//}
+if ($cache) {
+    $kernel = $kernel->getHttpCache();
+}
 
-$kernel = $kernel->getHttpCache();
+
 
 $request = Request::createFromGlobals();
 $response = $kernel->handle($request);
