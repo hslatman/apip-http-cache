@@ -74,3 +74,4 @@ For the sake of this POC it has been implemented to only trigger on the Bug enti
 ## TODO / Improvements
 
 * Look into cache refresh
+* Look into integration with API Platform using PurgerInterface
