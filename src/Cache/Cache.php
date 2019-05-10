@@ -7,11 +7,15 @@
 
 namespace App\Cache;
 
+use FOS\HttpCache\EventListener\LogListener;
 use FOS\HttpCache\SymfonyCache\CacheInvalidation;
 use FOS\HttpCache\SymfonyCache\DebugListener;
 use FOS\HttpCache\SymfonyCache\EventDispatchingHttpCache;
 use FOS\HttpCache\SymfonyCache\PurgeListener;
 use FOS\HttpCache\SymfonyCache\RefreshListener;
+use Monolog\Handler\ErrorLogHandler;
+use Monolog\Handler\StreamHandler;
+use Monolog\Logger;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\HttpCache\HttpCache;
 use Symfony\Component\HttpKernel\HttpCache\StoreInterface;
@@ -34,12 +38,18 @@ class Cache extends HttpCache implements CacheInvalidation
         $this->addSubscriber(new PurgeListener()); // SEE: https://foshttpcache.readthedocs.io/en/latest/symfony-cache-configuration.html#purge
         $this->addSubscriber(new RefreshListener()); // SEE: https://foshttpcache.readthedocs.io/en/latest/symfony-cache-configuration.html#refresh
 
-        // The DebugListener is used when testing caching functionality
+        // NOTE: injecting an error log here; we can't inject the default logger, yet. Haven't tested the log output yet.
+        $logger = new Logger('http_cache');
+        $handler = new ErrorLogHandler();
+        $logger->pushHandler($handler);
+        $this->addSubscriber(new LogListener($logger));
+
+        // The DebugListener is used when testing caching functionality; it logs the presence of miss/fresh in the X-Symfony-Cache header
         if (isset($options['debug']) && $options['debug']) {
             $this->addSubscriber(new DebugListener());
         }
 
-        // TODO: further customization?
+        // TODO: further customization? like handling tags?
 
     }
 
