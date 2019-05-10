@@ -23,6 +23,23 @@ fos_http_cache:
     enabled: true
   invalidation:
     enabled: true
+    rules:
+      -
+        match:
+          attributes:
+            _route: "api_issues_put_item|api_issues_delete_item"
+        routes:
+          api_issues_get_collection: # for some reason, the GET /api/issues is not invalidated using this match. Why? According to FOSHttpCacheBundle docs it should work.
+            ignore_extra_params: true
+          api_issues_get_item:
+            ignore_extra_params: false
+      -
+        match:
+          attributes:
+            _route: "api_issues_post_collection"
+        routes:
+          api_issues_get_collection: ~
+
   tags:
     annotations:
       # Currently we do not enable annotations, because API Platform is providing us with the default controllers for ApiResources.
