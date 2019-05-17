@@ -71,10 +71,18 @@ If this is the case, the corresponding collection route for the entity is constr
 The CacheInvalidationSubscriber is quite generic and does not need manual rules to be added to the configuration.
 For the sake of this POC it has been implemented to only trigger on the Bug entity, but it could well be put to use to all entity types, depending on the application in use.
 
+## Vary
+
+Currently configured for Vary are the Accept, Content-Type and Authorization headers.
+This means that whenever a client requests data to be looked up by URI, the Accept, Content-Type and Authorization headers are inspected and used to differentiate between clients.
+The result of the query may then either respond with a cached response or a newly created response, which is cached just before returning the new response.
+For the HttpCache integration with API Platform using a default Authorization header (e.g. JWTs for authentication), this results in the result being differentiated amongst clients, based on the JWT token they use to authenticate.
+When the JWT is renewed, the responses in the cache will not be valid for the client anymore, resulting in the original Symfony kernel handling the request and response.
+
 ## TODO / Improvements
 
 * Look into cache refresh
 * Look into integration with API Platform using PurgerInterface
 * Add UserContext and handling thereof in the cache
 * Add some custom commands for managing the HttpCache
-* Extend documentation
+* Extend documentation with general HttpCache usage server as well as client side
