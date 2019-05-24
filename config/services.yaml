@@ -28,3 +28,8 @@ services:
 
     api_platform.http_cache.purger:
         class: App\Cache\Purger
+
+    App\Cache\DoctrineCacheInvalidationListener:
+        class: App\Cache\DoctrineCacheInvalidationListener
+        tags:
+            - { name: doctrine.event_listener, event: onFlush }

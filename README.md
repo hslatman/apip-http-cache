@@ -30,6 +30,7 @@ We've implemented each of the methods to be used with a specific Entity:
 * Issue (Rule-based)
 * Item (Tag-based)
 * Bug (Custom)
+* Fix (Doctrine Events)
 
 Each of those will be described in the following subsections.
 
@@ -71,6 +72,16 @@ If this is the case, the corresponding collection route for the entity is constr
 The CacheInvalidationSubscriber is quite generic and does not need manual rules to be added to the configuration.
 For the sake of this POC it has been implemented to only trigger on the Bug entity, but it could well be put to use to all entity types, depending on the application in use.
 
+#### Fix
+
+The Fix entity is configured with cache invalidation through a Doctrine EventSubscriber.
+This is pretty similar to the setup used in API Platform (see PurgeHttpCacheListener) and PurgerInterface method, with the difference that we're not operating on $iris, but on entity classes instead.
+Using this method, we don't need to transform from $iris back to classes, the reverse of which is done in PurgeHttpCacheListener.
+When a Fix is mutated, all of the cached responses related to the Fix (item and collections) are purged.
+
+The DoctrineCacheInvalidationSubscriber is quite generic and no manual work is required to update the caching configuration.
+For the sake of the POC, the custom purger will only trigger on Fix entities, but it could be used to trigger on all kinds of entities.
+
 ## Vary
 
 Currently configured for Vary are the Accept, Content-Type and Authorization headers.
@@ -83,6 +94,8 @@ When the JWT is renewed, the responses in the cache will not be valid for the cl
 
 * Look into cache refresh
 * Look into integration with API Platform using PurgerInterface
+* What about pagination? Currently the full cache is purged; sounds reasonable to do, though.
+* What about warming up the request cache? In theory, we do know what the cached item should look like, but it might Vary...
 * Add UserContext and handling thereof in the cache
 * Add some custom commands for managing the HttpCache
 * Extend documentation with general HttpCache usage server as well as client side
