@@ -8,6 +8,9 @@
 namespace App\Cache;
 
 
+use ApiPlatform\Core\Api\OperationType;
+use ApiPlatform\Core\Bridge\Symfony\Routing\RouteNameResolver;
+use ApiPlatform\Core\Bridge\Symfony\Routing\RouteNameResolverInterface;
 use ApiPlatform\Core\Exception\InvalidArgumentException;
 use App\Entity\Fix;
 use Doctrine\Common\EventSubscriber;
@@ -19,18 +22,23 @@ use FOS\HttpCacheBundle\CacheManager;
 
 class DoctrineCacheInvalidationListener
 {
-    /** @var string[] $collection_classes */
-    private $collection_classes = [];
 
-    /** @var string[] $item_classes */
-    private $item_classes = [];
+    /** @var string[] $collection_routes */
+    private $collection_routes = [];
+
+    /** @var string[] $item_routes */
+    private $item_routes = [];
 
     /** @var CacheManager $manager */
     private $manager;
 
-    public function __construct(CacheManager $manager)
+    /** @var RouteNameResolverInterface $resolver */
+    private $resolver;
+
+    public function __construct(CacheManager $manager, RouteNameResolver $resolver)
     {
         $this->manager = $manager;
+        $this->resolver = $resolver;
     }
 
     public function onFlush(OnFlushEventArgs $args) {
@@ -45,6 +53,9 @@ class DoctrineCacheInvalidationListener
         // On second thought, perhaps it's better to always purge, because we need to update too when
         // something is handled within a service. Of course we could make this configurable in some way, though...
 
+        // We also should always update collections/items when there are related entities
+        // TODO: we need to look into pagination of the result sets
+
         foreach ($uow->getScheduledEntityInsertions() as $entity) {
             $this->gatherResourceAndItemClasses($entity, false);
             $this->gatherRelationClasses($em, $entity);
@@ -58,10 +69,13 @@ class DoctrineCacheInvalidationListener
             $this->gatherRelationClasses($em, $entity);
         }
 
-        //        if (\in_array(Fix::class, $this->collection_classes, true)) {
-//            dump($this->collection_classes);
-//            dd($this->item_classes);
-//        }
+        //$all_routes = array_merge($this->collection_classes, $this->item_classes);
+        //$unique_classes = array_unique($all_classes);
+
+
+        dump($this->collection_routes);
+        dump($this->item_routes);
+
 //
 //        $name = 'TODO';
 //        //$this->manager->invalidateRoute($name);
@@ -70,12 +84,12 @@ class DoctrineCacheInvalidationListener
     private function gatherResourceAndItemClasses($entity, bool $purgeItem): void
     {
         try {
-            $class = \get_class($entity);
-            // TODO: create the right route to purge.
-            $this->collection_classes[] = $class;
+            if (\get_class($entity) !== Fix::class) {
+                return;
+            }
+            $this->collection_routes[] = $this->resolver->getRouteName(Fix::class, OperationType::COLLECTION);
             if ($purgeItem) {
-                // TODO: create the right route to purge.
-                $this->item_classes[] = $class;
+                $this->item_routes[] = $this->resolver->getRouteName(Fix::class, OperationType::ITEM);
             }
         } catch (InvalidArgumentException $e) {
             return;
@@ -84,6 +98,9 @@ class DoctrineCacheInvalidationListener
 
     private function gatherRelationClasses(EntityManagerInterface $em, $entity): void
     {
+        if (\get_class($entity) !== Fix::class) {
+            return;
+        }
 //        $associationMappings = $em->getClassMetadata(ClassUtils::getClass($entity))->getAssociationMappings();
 //        foreach (array_keys($associationMappings) as $property) {
 //            $this->addTagsFor($this->propertyAccessor->getValue($entity, $property));

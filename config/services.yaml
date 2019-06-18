@@ -29,6 +29,9 @@ services:
     api_platform.http_cache.purger:
         class: App\Cache\Purger
 
+    ApiPlatform\Core\Bridge\Symfony\Routing\RouteNameResolver:
+        alias: api_platform.route_name_resolver.cached.inner
+
     App\Cache\DoctrineCacheInvalidationListener:
         class: App\Cache\DoctrineCacheInvalidationListener
         tags:
