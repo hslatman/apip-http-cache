@@ -13,11 +13,8 @@ use ApiPlatform\Core\Bridge\Symfony\Routing\RouteNameResolver;
 use ApiPlatform\Core\Bridge\Symfony\Routing\RouteNameResolverInterface;
 use ApiPlatform\Core\Exception\InvalidArgumentException;
 use App\Entity\Fix;
-use Doctrine\Common\EventSubscriber;
-use Doctrine\Common\Util\ClassUtils;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Event\OnFlushEventArgs;
-use Doctrine\ORM\Events;
 use FOS\HttpCacheBundle\CacheManager;
 
 class DoctrineCacheInvalidationListener
@@ -69,27 +66,34 @@ class DoctrineCacheInvalidationListener
             $this->gatherRelationClasses($em, $entity);
         }
 
-        //$all_routes = array_merge($this->collection_classes, $this->item_classes);
-        //$unique_classes = array_unique($all_classes);
 
+        foreach($this->collection_routes as $route) {
+            $this->manager->invalidateRoute($route);
+        }
 
-        dump($this->collection_routes);
-        dump($this->item_routes);
+        foreach($this->item_routes as $item) {
+            $route = $item['route'];
+            $parameters = $item['parameters'];
+            $this->manager->invalidateRoute($route, $parameters);
+        }
 
-//
-//        $name = 'TODO';
-//        //$this->manager->invalidateRoute($name);
     }
 
     private function gatherResourceAndItemClasses($entity, bool $purgeItem): void
     {
+
+        // TODO: filter doubles? i.e. the ones that are triggerd automatically by symfony/cache already?
+
         try {
             if (\get_class($entity) !== Fix::class) {
                 return;
             }
-            $this->collection_routes[] = $this->resolver->getRouteName(Fix::class, OperationType::COLLECTION);
+            $route = $this->resolver->getRouteName(Fix::class, OperationType::COLLECTION);
+            $this->collection_routes[] = $route;
             if ($purgeItem) {
-                $this->item_routes[] = $this->resolver->getRouteName(Fix::class, OperationType::ITEM);
+                $route = $this->resolver->getRouteName(Fix::class, OperationType::ITEM);
+                $parameters = ['id' => $entity->getId()]; // TODO: assuming an id is set; can we do better?
+                $this->item_routes[] = ['route' => $route, 'parameters' => $parameters];
             }
         } catch (InvalidArgumentException $e) {
             return;
