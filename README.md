@@ -72,6 +72,9 @@ If this is the case, the corresponding collection route for the entity is constr
 The CacheInvalidationSubscriber is quite generic and does not need manual rules to be added to the configuration.
 For the sake of this POC it has been implemented to only trigger on the Bug entity, but it could well be put to use to all entity types, depending on the application in use.
 
+This method does not take into account whether the mutating request actually mutates the entity; it's simply triggered upon performing the request.
+It also does not inspect the relations an entity may have.
+
 #### Fix
 
 The Fix entity is configured with cache invalidation through a Doctrine Event Listener.
