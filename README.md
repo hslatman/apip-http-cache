@@ -99,6 +99,7 @@ When the JWT is renewed, the responses in the cache will not be valid for the cl
 
 ## TODO / Improvements
 
+* Add router parameters for the UrlGenerator; CacheManager relies on them to generate the path to purge.
 * Look into integration with API Platform using PurgerInterface.
 * What about pagination? Currently the full cache is purged; sounds reasonable to do, though.
 * What about warming up the request cache? In theory, we do know what the cached item should look like, but it might Vary...
