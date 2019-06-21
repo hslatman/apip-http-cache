@@ -24,7 +24,9 @@ use Doctrine\ORM\Event\OnFlushEventArgs;
 use Doctrine\ORM\Event\PreUpdateEventArgs;
 use Doctrine\ORM\PersistentCollection;
 use FOS\HttpCacheBundle\CacheManager;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\PropertyAccess\PropertyAccess;
+use \Symfony\Component\PropertyAccess\PropertyAccessor;
 
 class DoctrineCacheInvalidationListener
 {
@@ -41,13 +43,17 @@ class DoctrineCacheInvalidationListener
     /** @var RouteNameResolverInterface $resolver */
     private $resolver;
 
-    /** @var \Symfony\Component\PropertyAccess\PropertyAccessor $property_accessor */
+    /** @var PropertyAccessor $property_accessor */
     private $property_accessor;
 
-    public function __construct(CacheManager $manager, RouteNameResolver $resolver)
+    /** @var LoggerInterface $logger */
+    private $logger;
+
+    public function __construct(CacheManager $manager, RouteNameResolver $resolver, LoggerInterface $logger)
     {
         $this->manager = $manager;
         $this->resolver = $resolver;
+        $this->logger = $logger;
         $this->property_accessor = PropertyAccess::createPropertyAccessor();
     }
 
@@ -82,15 +88,15 @@ class DoctrineCacheInvalidationListener
 
         foreach ($uow->getScheduledEntityInsertions() as $entity) {
             // NOTE: including the entity insertions, because we might be running in a service, not in a request
-            $this->gatherResourceRoutes($entity);
+            $this->gatherResourceRoutes($entity, false);
             $this->gatherRelationRoutes($em, $entity);
         }
         foreach ($uow->getScheduledEntityUpdates() as $entity) {
-            $this->gatherResourceRoutes($entity);
+            $this->gatherResourceRoutes($entity, true);
             $this->gatherRelationRoutes($em, $entity);
         }
         foreach ($uow->getScheduledEntityDeletions() as $entity) {
-            $this->gatherResourceRoutes($entity);
+            $this->gatherResourceRoutes($entity, true);
             $this->gatherRelationRoutes($em, $entity);
         }
 
@@ -105,14 +111,27 @@ class DoctrineCacheInvalidationListener
         $unique_collection_routes = array_unique($this->collection_routes);
 
         foreach($unique_collection_routes as $route) {
+            $this->logger->debug("Invalidating route: {$route}");
             $this->manager->invalidateRoute($route);
         }
 
+        $unique_item_routes = array_unique($this->item_routes);
+        foreach ($unique_item_routes as $item) {
+            $route = $item['route'];
+            $parameters = $item['parameters'];
+            $this->logger->debug("Invalidating route: {$route}");
+            $this->manager->invalidateRoute($route, $parameters);
+        }
+
+        dump($unique_collection_routes);
+        dump($unique_item_routes);
+
         $this->collection_routes = [];
+        $this->item_routes = [];
 
     }
 
-    private function gatherResourceRoutes($entity): void
+    private function gatherResourceRoutes($entity, $purge_item = false): void
     {
 
         // TODO: filter doubles? i.e. the ones that are triggerd automatically by symfony/cache already?
@@ -126,7 +145,14 @@ class DoctrineCacheInvalidationListener
             $route = $this->resolver->getRouteName($class, OperationType::COLLECTION);
             $this->collection_routes[] = $route;
 
+            if ($purge_item) {
+                $route = $this->resolver->getRouteName($class, OperationType::ITEM);
+                $parameters = ['id' => $entity->getId()]; // TODO: make safer? Through reflexion? Helper functions in API Platform?
+                $this->item_routes[] = ['route' => $route, 'parameters' => $parameters];
+            }
+
         } catch (InvalidArgumentException $e) {
+            $this->logger->error($e);
             return;
         }
     }
@@ -177,9 +203,11 @@ class DoctrineCacheInvalidationListener
             $this->collection_routes[] = $route;
 
         } catch (InvalidArgumentException $e) {
-
+            $this->logger->error($e);
+            return;
         } catch (RuntimeException $e) {
-
+            $this->logger->error($e);
+            return;
         }
 
     }
