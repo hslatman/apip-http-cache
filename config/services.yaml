@@ -34,8 +34,8 @@ services:
     ApiPlatform\Core\Bridge\Symfony\Routing\RouteNameResolver:
         alias: api_platform.route_name_resolver.cached.inner
 
-    App\Cache\DoctrineCacheInvalidationListener:
-        class: App\Cache\DoctrineCacheInvalidationListener
+    App\Cache\DoctrineCacheInvalidationUsingRouteNamesListener:
+        class: App\Cache\DoctrineCacheInvalidationUsingRouteNamesListener
         tags:
             - { name: doctrine.event_listener, event: preUpdate }
             - { name: doctrine.event_listener, event: onFlush }

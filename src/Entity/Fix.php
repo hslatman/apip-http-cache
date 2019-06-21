@@ -26,7 +26,12 @@ class Fix
     /**
      * @ORM\OneToOne(targetEntity="App\Entity\FixRelation", cascade={"persist", "remove"})
      */
-    private $relation;
+    private $fix_relation;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="FixGroup", inversedBy="Fix")
+     */
+    private $fix_group;
 
     public function getId(): ?int
     {
@@ -45,14 +50,26 @@ class Fix
         return $this;
     }
 
-    public function getRelation(): ?FixRelation
+    public function getFixRelation(): ?FixRelation
     {
-        return $this->relation;
+        return $this->fix_relation;
     }
 
-    public function setRelation(?FixRelation $relation): self
+    public function setFixRelation(?FixRelation $fix_relation): self
     {
-        $this->relation = $relation;
+        $this->fix_relation = $fix_relation;
+
+        return $this;
+    }
+
+    public function getFixGroup(): ?FixGroup
+    {
+        return $this->fix_group;
+    }
+
+    public function setFixGroup(?FixGroup $fix_group): self
+    {
+        $this->fix_group = $fix_group;
 
         return $this;
     }

@@ -74,12 +74,14 @@ For the sake of this POC it has been implemented to only trigger on the Bug enti
 
 #### Fix
 
-The Fix entity is configured with cache invalidation through a Doctrine EventSubscriber.
+The Fix entity is configured with cache invalidation through a Doctrine Event Listener.
 This is pretty similar to the setup used in API Platform (see PurgeHttpCacheListener) and PurgerInterface method, with the difference that we're not operating on $iris, but on entity classes instead.
 Using this method, we don't need to transform from $iris back to classes, the reverse of which is done in PurgeHttpCacheListener.
 When a Fix is mutated, all of the cached responses related to the Fix (item and collections) are purged.
 We've also added a (simple, OneToOne) relation to the Fix, a FixRelation, to test handling relations in this approach.
 Currently we invalidate the cache for the collection of FixRelations when a Fix is updated.
+In addition to that, we've also included a OneToMany relation from FixGroup to Fix.
+The collection route for FixGroups is also invalidated using the CacheManager.
 
 The DoctrineCacheInvalidationSubscriber is quite generic and no manual work is required to update the caching configuration.
 For the sake of the POC, the custom purger will only trigger on Fix entities, but it could be used to trigger on all kinds of entities.
@@ -94,10 +96,10 @@ When the JWT is renewed, the responses in the cache will not be valid for the cl
 
 ## TODO / Improvements
 
-* Look into cache refresh
-* Look into integration with API Platform using PurgerInterface
+* Look into integration with API Platform using PurgerInterface.
 * What about pagination? Currently the full cache is purged; sounds reasonable to do, though.
 * What about warming up the request cache? In theory, we do know what the cached item should look like, but it might Vary...
-* Add UserContext and handling thereof in the cache
-* Add some custom commands for managing the HttpCache
-* Extend documentation with general HttpCache usage server as well as client side
+* Add UserContext and handling thereof in the cache.
+* Add some custom commands for managing the HttpCache.
+* Look into using tag-based approach to cache invalidation in combination with Symfony HttpCache.
+* Extend documentation with general HttpCache usage server as well as client side.

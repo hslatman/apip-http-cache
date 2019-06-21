@@ -11,13 +11,13 @@
 
 namespace App\Cache;
 
-
 use ApiPlatform\Core\Api\OperationType;
 use ApiPlatform\Core\Bridge\Symfony\Routing\RouteNameResolver;
 use ApiPlatform\Core\Bridge\Symfony\Routing\RouteNameResolverInterface;
 use ApiPlatform\Core\Exception\InvalidArgumentException;
 use ApiPlatform\Core\Exception\RuntimeException;
 use App\Entity\Fix;
+use App\Entity\FixGroup;
 use App\Entity\FixRelation;
 use Doctrine\Common\Util\ClassUtils;
 use Doctrine\ORM\EntityManagerInterface;
@@ -29,7 +29,7 @@ use Psr\Log\LoggerInterface;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 use \Symfony\Component\PropertyAccess\PropertyAccessor;
 
-class DoctrineCacheInvalidationListener
+class DoctrineCacheInvalidationUsingRouteNamesListener
 {
 
     /** @var string[] $collection_routes */
@@ -49,6 +49,16 @@ class DoctrineCacheInvalidationListener
 
     /** @var LoggerInterface $logger */
     private $logger;
+
+    /** @var string[] $classes
+     *
+     * Only the classes in this array will be acted upon by the DoctrineCacheInvalidationListener
+     */
+    private $classes = [
+        Fix::class,
+        FixGroup::class,
+        FixRelation::class,
+    ];
 
     public function __construct(CacheManager $manager, RouteNameResolver $resolver, LoggerInterface $logger)
     {
@@ -89,6 +99,7 @@ class DoctrineCacheInvalidationListener
 
         foreach ($uow->getScheduledEntityInsertions() as $entity) {
             // NOTE: including the entity insertions, because we might be running in a service, not in a request
+            // This results in the same cache entry being invalidated twice during a request.
             $this->gatherResourceRoutes($entity, false);
             $this->gatherRelationRoutes($em, $entity);
         }
@@ -124,9 +135,6 @@ class DoctrineCacheInvalidationListener
             $this->manager->invalidateRoute($route, $parameters);
         }
 
-        dump($unique_collection_routes);
-        dump($unique_item_routes);
-
         $this->collection_routes = [];
         $this->item_routes = [];
 
@@ -139,7 +147,7 @@ class DoctrineCacheInvalidationListener
 
         try {
             $class = ClassUtils::getClass($entity);
-            if ($class !== Fix::class) {
+            if (!\in_array($class, $this->classes, true)) {
                 return;
             }
 
@@ -161,7 +169,7 @@ class DoctrineCacheInvalidationListener
     private function gatherRelationRoutes(EntityManagerInterface $em, $entity): void
     {
         $class = ClassUtils::getClass($entity);
-        if ($class !== Fix::class) {
+        if (!\in_array($class, $this->classes, true)) {
             return;
         }
 
@@ -197,12 +205,14 @@ class DoctrineCacheInvalidationListener
     {
         try {
             $class = ClassUtils::getClass($value);
-            if ($class !== Fix::class && $class !== FixRelation::class) {
+            if (!\in_array($class, $this->classes, true)) {
                 return;
             }
 
             $route = $this->resolver->getRouteName($class, OperationType::COLLECTION);
             $this->collection_routes[] = $route;
+
+            // TODO: do we need look for item routes?
 
         } catch (InvalidArgumentException $e) {
             $this->logger->error($e);
