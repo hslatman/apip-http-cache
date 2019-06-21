@@ -18,6 +18,7 @@ use ApiPlatform\Core\Bridge\Symfony\Routing\RouteNameResolverInterface;
 use ApiPlatform\Core\Exception\InvalidArgumentException;
 use ApiPlatform\Core\Exception\RuntimeException;
 use App\Entity\Fix;
+use App\Entity\FixRelation;
 use Doctrine\Common\Util\ClassUtils;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Event\OnFlushEventArgs;
@@ -172,6 +173,7 @@ class DoctrineCacheInvalidationListener
 
     private function addRoutesFor($value) : void
     {
+
         if (!$value) {
             return;
         }
@@ -195,7 +197,7 @@ class DoctrineCacheInvalidationListener
     {
         try {
             $class = ClassUtils::getClass($value);
-            if ($class !== Fix::class) {
+            if ($class !== Fix::class && $class !== FixRelation::class) {
                 return;
             }
 

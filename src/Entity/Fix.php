@@ -23,6 +23,11 @@ class Fix
      */
     private $description;
 
+    /**
+     * @ORM\OneToOne(targetEntity="App\Entity\FixRelation", cascade={"persist", "remove"})
+     */
+    private $relation;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -36,6 +41,18 @@ class Fix
     public function setDescription(string $description): self
     {
         $this->description = $description;
+
+        return $this;
+    }
+
+    public function getRelation(): ?FixRelation
+    {
+        return $this->relation;
+    }
+
+    public function setRelation(?FixRelation $relation): self
+    {
+        $this->relation = $relation;
 
         return $this;
     }

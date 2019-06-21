@@ -78,6 +78,8 @@ The Fix entity is configured with cache invalidation through a Doctrine EventSub
 This is pretty similar to the setup used in API Platform (see PurgeHttpCacheListener) and PurgerInterface method, with the difference that we're not operating on $iris, but on entity classes instead.
 Using this method, we don't need to transform from $iris back to classes, the reverse of which is done in PurgeHttpCacheListener.
 When a Fix is mutated, all of the cached responses related to the Fix (item and collections) are purged.
+We've also added a (simple, OneToOne) relation to the Fix, a FixRelation, to test handling relations in this approach.
+Currently we invalidate the cache for the collection of FixRelations when a Fix is updated.
 
 The DoctrineCacheInvalidationSubscriber is quite generic and no manual work is required to update the caching configuration.
 For the sake of the POC, the custom purger will only trigger on Fix entities, but it could be used to trigger on all kinds of entities.
