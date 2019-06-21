@@ -26,5 +26,17 @@ services:
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
 
+    'Symfony\Component\Serializer\NameConverter\CamelCaseToSnakeCaseNameConverter': ~
+
     api_platform.http_cache.purger:
         class: App\Cache\Purger
+
+    ApiPlatform\Core\Bridge\Symfony\Routing\RouteNameResolver:
+        alias: api_platform.route_name_resolver.cached.inner
+
+    App\Cache\DoctrineCacheInvalidationUsingRouteNamesListener:
+        class: App\Cache\DoctrineCacheInvalidationUsingRouteNamesListener
+        tags:
+            - { name: doctrine.event_listener, event: preUpdate }
+            - { name: doctrine.event_listener, event: onFlush }
+            - { name: doctrine.event_listener, event: postFlush }

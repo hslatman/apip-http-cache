@@ -7,9 +7,12 @@
 
 namespace App\Cache;
 
+use ApiPlatform\Core\Api\OperationType;
+use ApiPlatform\Core\Bridge\Symfony\Routing\RouteNameResolver;
 use ApiPlatform\Core\EventListener\EventPriorities;
 use App\Entity\Bug;
 
+use Doctrine\Common\Util\ClassUtils;
 use FOS\HttpCacheBundle\CacheManager;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,9 +25,13 @@ class CacheInvalidationSubscriber implements EventSubscriberInterface
     /** @var CacheManager $manager */
     private $manager;
 
-    public function __construct(CacheManager $manager)
+    /** @var RouteNameResolver $resolver */
+    private $resolver;
+
+    public function __construct(CacheManager $manager, RouteNameResolver $resolver)
     {
         $this->manager = $manager;
+        $this->resolver = $resolver;
     }
 
     public static function getSubscribedEvents()
@@ -51,7 +58,8 @@ class CacheInvalidationSubscriber implements EventSubscriberInterface
         $route = $request->attributes->get('_route');
         $route_parts = explode('_', $route);
 
-        // We only need to perform cache invalidation on item type routes; the collection type routes are handled by HttpCache itself
+        // We only need to perform cache invalidation on collection type routes when an item is being mutated.
+        // The collection type routes are handled by HttpCache itself, as well as the item retrieval operation.
         $is_item_route = $route_parts[\count($route_parts)-1] === 'item';
         if (!$is_item_route) {
             return;
@@ -63,8 +71,8 @@ class CacheInvalidationSubscriber implements EventSubscriberInterface
             return;
         }
 
-        // NOTE: a bit hacky, but we're constructing the appropriate collection route from the item route
-        $collection_route = implode('_', \array_slice($route_parts, 0, -2)) . '_get_collection';
+        $class = ClassUtils::getClass($entity);
+        $collection_route = $this->resolver->getRouteName($class, OperationType::COLLECTION);
 
         // We only need to invalidate the collection route by default in API Platform; the other default operations are managed by HttpCache itself
         $this->manager->invalidateRoute($collection_route);
